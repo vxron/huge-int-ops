@@ -81,16 +81,19 @@ HugeInteger::HugeInteger(const string& val) {
 	// BUT WE USE POINTER P instead of val to avoid negative at beginning
 	for(int i=0;i<length;i++){
 		printf("%c \n",p[i]);
-		data[i] = p[i];
+		// convert from ascii by adding '0'
+		data[i] = p[i]-'0';
 		// append string decimal to our data array
 		// testing purposes
 		printf("1 %d \n",data[i]);
 	}
 
 	// testing purposes
+	/*
 	for(int i=0;i<length;i++){
 		printf("r %d \n",data[i]);
 	}
+	*/
 
 }
 
@@ -121,18 +124,12 @@ HugeInteger::HugeInteger(int n) {
 		isNegative=1;
 		// testing purposes
 		printf("negative \n");
-		printf("r %d \n",distr(gen));
-		printf("r %d \n",distr(gen));
-		printf("r %d \n",distr(gen));
 	}
 	else{
 		// positive if the random number is 0,1,2,3,4
 		isNegative=0;
 		// testing purposes
 		printf("positive \n");
-		printf("r %d \n",distr(gen));
-		printf("r %d \n",distr(gen));
-		printf("r %d \n",distr(gen));
 	}
 
 	length=n;
@@ -143,13 +140,23 @@ HugeInteger::HugeInteger(int n) {
 	// first digit can't be a 0
 	//maybe it can be lol - COME BACK
 
+	// use a while loop (xav is insane)
+	// make sure data[0] isn't 0
+	// so we'll keep looping until it gives something other than 0 to start with
+	*data=0;
+	while(*data==0){
+		// assigning value *data = data[0]
+		*data=distr(gen);
+	}
+
 	// randomly generate digits
-	for(int i=0;i<n;i++){
+	// starting at 1 cuz we already got data[0] above to make sure it wasn't 0
+	for(int i=1;i<n;i++){
 		// generate consecutive random digits
 		data[i]=distr(gen);
 		// testing purposes
-		printf("%d",data[i]);
-		printf("\n");
+		//printf("%d",data[i]);
+		//printf("\n");
 	}
 
 
@@ -158,7 +165,7 @@ HugeInteger::HugeInteger(int n) {
 
 }
 
-// Copy Constructor --ensure we wont have memory space issures with destructor (see below)
+// Copy Constructor --ensure we wont have memory space issues with destructor (see below)
 HugeInteger::HugeInteger(const HugeInteger& num){
 	// this-> notation is implicit here
 	isNegative=num.isNegative;
@@ -190,8 +197,125 @@ int a(){
 */
 
 HugeInteger HugeInteger::add(const HugeInteger& h) {
-	// TODO
-	return HugeInteger("");
+	HugeInteger result;
+
+	// collect and store information/attributes
+	/*
+	int hlength = h.length;
+	int thislength = this->length;
+	bool hneg = h.isNegative;
+	bool thisneg = this->isNegative;
+	*/
+
+	// see if we're gonna need substraction or addition
+	if(h.isNegative != this->isNegative){
+		// then we have a +,- situation going on, which calls for subtraction
+		this->HugeInteger::subtract(h);
+	}
+	else if(h.isNegative == true && this->isNegative == true){
+		// both numbers are negative, so sum hugeint will also be negative
+		result.isNegative = true;
+	}
+	else{
+		result.isNegative=false;
+	}
+
+	// case where both numbers are positive
+
+
+	// length will be at most one digit longer than greatest size
+
+	// get iteration number n --> run through size of greatest array
+	// declare n outside of if scope
+	int n=0;
+	if(h.length<=this->length){
+		// loop through this length
+		n=this->length;
+	}
+	else{
+		// loop through alternate h
+		n=h.length;
+	}
+
+	// allocate memory for result's data
+	// but we don't know length yet, so we'll allocate temporary array
+	// know max length is n+1
+	int* temp_arr = new int [n+1];
+
+
+	// initialize carry
+	int carry=0;
+
+	// i will become 1 if it's negative (so we'll be able to add negative at 0th index
+	// and it will remain 0 if it's positive
+	int end=h.isNegative;
+
+	// variable to loop thru temp_array cuz we index 0->n here
+	// want this "reverse" indexing here cuz we wanna add carry or not at end, depending, without having to shift entire array
+	// so we'll reverse our data instead of shifting
+	int j=0;
+
+	for(int i=n-1;i>=end;i--){
+
+		int tempsum = h.data[i]+this->data[i]+carry;
+
+		// find resulting (last) digit (ones place of temp)
+		temp_arr[j]=tempsum%10;
+		// find carry (first) value (tens place of temp)
+		// but we know max value of temp will be <100
+		// integer division comes clutch here
+		carry=tempsum/10;
+		j++;
+
+	}
+
+	// if we terminate with non zero carry, our length will be n+1
+	// result array will take values of temp_array IN REVERSE + value of carry
+	if(carry!=0){
+		result.length=n+1;
+		// allocate data
+		result.data = new int [result.length];
+		result.data[0]=carry;
+	}
+	else{
+		result.length=n;
+		// allocate data
+		result.data = new int [result.length];
+	}
+
+	/*
+	// reverse temp array
+	for(int i=0;i<(n+1);i++){
+		int temp=temp_arr[i];
+		// preserve value
+		temp_arr[i]=temp_arr[n-i];
+		temp_arr[n-i]=temp;
+	}
+	*/
+
+	// create pointer to point to beginning of temp_arr
+	int* ptemp = result.data;
+
+	if(carry!=0){
+		ptemp++;
+		// start at index 1 instead of 0
+	}
+
+	// counter for temp_array
+	int m=0;
+
+	while(ptemp!=(result.data+result.length)){
+		// while pointer is not out of range, that is address result.data has not incremented to past length
+		*ptemp = temp_arr[m];
+		// dereferencing
+		ptemp++;
+		m++;
+	}
+
+	// free space
+	delete[] temp_arr;
+
+	return result;
 }
 
 HugeInteger HugeInteger::subtract(const HugeInteger& h) {
@@ -212,10 +336,32 @@ int HugeInteger::compareTo(const HugeInteger& h) {
 std::string HugeInteger::toString() {
 	// taking array of ints and convert it to string (if its negative, add "-", all this)
 
-	//string output_string = new char[];
+	//initialize string - strings in c++ are stored in the stack (not the heap), so they are allocated dynamically by default (dont need NEW keyword) resizable during runtime
+	string output_string;
 
-	for(int i=0;i<length;i++){
+	// pointer to iterate thru string
+	// char* p = output_string;
+	// string::iterator it;
+	// (stores address of a character of str)
+	//it=output_string.begin();
+
+	if(isNegative==true){
+		output_string.push_back('-');
+		// pointer to go through output string
+		// increment it by 1 so we start at first digit rather than negative sign (in line w data array)
 
 	}
-	//return output_string;
+
+	for(int j=0;j<length;j++){
+		// convert list int to char
+		// add '0' to cast to char type from int type
+
+		char temp = data[j]+'0';
+		//printf("d %d \n",data[j]);
+		// append to string (concatenate our temp char into output_string)
+		output_string.push_back(temp);
+	}
+
+	printf("s %s \n",output_string.c_str());
+	return output_string;
 }
