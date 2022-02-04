@@ -51,7 +51,7 @@ HugeInteger::HugeInteger(const string& val) {
 		// length (num. of DIGITS) will be string size - 1 for "-"
 		length=val.size()-1;
 		// testing purposes
-		printf("size %d \n",length);
+		//printf("size %d \n",length);
 
 	}
 	// if it's not negative, so there's no dash
@@ -60,7 +60,7 @@ HugeInteger::HugeInteger(const string& val) {
 		// length is just length of string
 		length=val.size();
 		// testing purposes
-		printf("size %d \n",length);
+		//printf("size %d \n",length);
 
 	}
 
@@ -80,12 +80,12 @@ HugeInteger::HugeInteger(const string& val) {
 	// iterate through string to fill dynamically allocated array
 	// BUT WE USE POINTER P instead of val to avoid negative at beginning
 	for(int i=0;i<length;i++){
-		printf("%c \n",p[i]);
+		//printf("%c \n",p[i]);
 		// convert from ascii by adding '0'
 		data[i] = p[i]-'0';
 		// append string decimal to our data array
 		// testing purposes
-		printf("1 %d \n",data[i]);
+		//printf("1 %d \n",data[i]);
 	}
 
 	// testing purposes
@@ -227,15 +227,43 @@ HugeInteger HugeInteger::add(const HugeInteger& h) {
 
 	// get iteration number n --> run through size of greatest array
 	// declare n outside of if scope
+	// n is size of bigger array
 	int n=0;
+	// m is size of smaller array
+	int m=0;
+	// initialize pointers
+	// n is pointer to bigger
+	int* nptr;
+	// m is pointer to smaller
+	int* mptr;
 	if(h.length<=this->length){
 		// loop through this length
 		n=this->length;
+		m=h.length;
+		// initialize pointers indicating diff sized arrays
+		nptr = this->data;
+		mptr = h.data;
 	}
 	else{
 		// loop through alternate h
 		n=h.length;
+		m=this->length;
+		// initialize pointers indicating diff sized arrays
+		nptr = h.data;
+		mptr = this->data;
 	}
+
+	// print big array
+	int* ntemp = nptr;
+	int* mtemp = mptr;
+	printf("big \n");
+	for(int t=0;t<n;t++){printf("%d",*ntemp);ntemp++;}
+	printf("\n");
+
+	// print smol array
+	printf("smol \n");
+	for(int t=0;t<m;t++){printf("%d",*mtemp);mtemp++;}
+	printf("\n");
 
 	// allocate memory for result's data
 	// but we don't know length yet, so we'll allocate temporary array
@@ -246,18 +274,28 @@ HugeInteger HugeInteger::add(const HugeInteger& h) {
 	// initialize carry
 	int carry=0;
 
-	// i will become 1 if it's negative (so we'll be able to add negative at 0th index
-	// and it will remain 0 if it's positive
-	int end=h.isNegative;
 
 	// variable to loop thru temp_array cuz we index 0->n here
 	// want this "reverse" indexing here cuz we wanna add carry or not at end, depending, without having to shift entire array
 	// so we'll reverse our data instead of shifting
+	// notice j keeps track of how many
 	int j=0;
+	// smaller array counter (m with k)
+	int k=m-1;
+	// larger array counter (n with i)
+	for(int i=n-1;i>=0;i--){
 
-	for(int i=n-1;i>=end;i--){
+		int tempsum = 0;
 
-		int tempsum = h.data[i]+this->data[i]+carry;
+		// take larger + smaller until k=0, then take larger only
+		if(k>=0){
+			tempsum = nptr[i]+mptr[k]+carry;
+		}
+
+		else{
+			// now we only want larger (n with i)
+			tempsum = nptr[i]+carry;
+		}
 
 		// find resulting (last) digit (ones place of temp)
 		temp_arr[j]=tempsum%10;
@@ -266,7 +304,7 @@ HugeInteger HugeInteger::add(const HugeInteger& h) {
 		// integer division comes clutch here
 		carry=tempsum/10;
 		j++;
-
+		k--;
 	}
 
 	// if we terminate with non zero carry, our length will be n+1
@@ -283,39 +321,83 @@ HugeInteger HugeInteger::add(const HugeInteger& h) {
 		result.data = new int [result.length];
 	}
 
-	/*
+	// print temp array
+	printf("before \n");
+	for(int t=0;t<j;t++){printf("%d",temp_arr[t]);}
+	printf("\n");
+
+
+	// j stores number of elements in temp array --> based on loop above
 	// reverse temp array
-	for(int i=0;i<(n+1);i++){
+	for(int i=0;i<j/2;i++){
 		int temp=temp_arr[i];
 		// preserve value
-		temp_arr[i]=temp_arr[n-i];
-		temp_arr[n-i]=temp;
+		temp_arr[i]=temp_arr[j-i-1];
+		temp_arr[j-i-1]=temp;
 	}
-	*/
+
+	// print temp array
+	printf("after \n");
+	for(int t=0;t<j;t++){printf("%d",temp_arr[t]);}
+	printf("\n");
+
 
 	// create pointer to point to beginning of temp_arr
 	int* ptemp = result.data;
 
 	if(carry!=0){
 		ptemp++;
-		// start at index 1 instead of 0
+		// start at index 1 of result.data instead of 0
+		// bas STILL INDEX 0 OF TEMP_ARR
 	}
 
 	// counter for temp_array
-	int m=0;
+	// adds 1 if carry is true
+	int z=0;
 
 	while(ptemp!=(result.data+result.length)){
 		// while pointer is not out of range, that is address result.data has not incremented to past length
-		*ptemp = temp_arr[m];
+		*ptemp = temp_arr[z];
 		// dereferencing
 		ptemp++;
-		m++;
+		z++;
 	}
+
+	// print result array
+	printf("after after result \n");
+	for(int t=0;t<result.length;t++){printf("%d",result.data[t]);}
+	printf("\n");
+
+
+
+	/*
+	const HugeInteger& a = h;
+	const HugeInteger& b = *this;
+	int i = a.length > b.length ? a.length : b.length;
+	int j = a.length < b.length ? a.length : b.length;
+	int carry = 0;
+	int k = 0;
+	int len = 0;
+	do {
+	  if(!i--) break;
+	  if(!j--) break;
+	  int ts = a.data[i] + b.data[j] + carry;
+	  temp_arr[k++] = ts % 10;
+	  carry /= 10;
+	  len++;
+	} while(carry);
+	result.data = new int[len];
+	for(int x = 0; x < len; x++){
+	  result.data[len - x - 1] = temp_arr[x];
+	}
+	result.length=len;
+	*/
 
 	// free space
 	delete[] temp_arr;
 
 	return result;
+
 }
 
 HugeInteger HugeInteger::subtract(const HugeInteger& h) {
@@ -362,6 +444,6 @@ std::string HugeInteger::toString() {
 		output_string.push_back(temp);
 	}
 
-	printf("s %s \n",output_string.c_str());
+	printf("tostring s %s \n",output_string.c_str());
 	return output_string;
 }
