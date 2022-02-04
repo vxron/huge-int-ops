@@ -44,48 +44,35 @@ HugeInteger::HugeInteger(const string& val) {
 	}
 
 
-
 	// if it's negative, so there's a dash at beginning
 	if(val[0]=='-'){
 		isNegative=1; // true
 		// length (num. of DIGITS) will be string size - 1 for "-"
 		length=val.size()-1;
-		// testing purposes
-		//printf("size %d \n",length);
-
 	}
 	// if it's not negative, so there's no dash
 	else{
 		isNegative=0; // false
 		// length is just length of string
 		length=val.size();
-		// testing purposes
-		//printf("size %d \n",length);
-
 	}
 
-	// initialize data array (NVM:+ allocate memory space with 'new' keyword)
-	// everything is initialized to 0
+	// allocate memory space for data array with 'new' keyword; everything is initialized to 0
 	// kinda like a placeholder for the space
-	// resizing data for storing array
 	data = new int [length];
 
-	// pointer to val
+	// create pointer to val (input string)
 	const char* p = &val[0];
 	if(*p=='-'){
-		// increment position by 1 (p++ increments by size of char)
+		// increment position by 1 (p++ increments by size of char) if there's a negative at val[0]
 		p++;
 	}
 
 	// iterate through string to fill dynamically allocated array
-	// BUT WE USE POINTER P instead of val to avoid negative at beginning
+	// BUT WE USE POINTER p instead of val to avoid negative at beginning (p starts at val[0] if it's a digit, and starts at val[1] if not, continues until we reach length of data array, not including "-")
 	for(int i=0;i<length;i++){
-		//printf("%c \n",p[i]);
 		// convert from ascii by adding '0'
 		data[i] = p[i]-'0';
-		// append string decimal to our data array
-		// testing purposes
-		//printf("1 %d \n",data[i]);
 	}
 
 	// testing purposes
@@ -98,22 +85,19 @@ HugeInteger::HugeInteger(const string& val) {
 }
 
 // CONSTRUCTOR: create random HugeInteger of n digits
-// workss on online gdb
 HugeInteger::HugeInteger(int n) {
 	// error handling
 	if(n<1){
 		throw invalid_argument("Invalid decimal input. Make sure you're entering an integer >0.");
 	}
 
-	// define a random device
-	random_device rd;
-	// standard mersenne_twister_engine seeded with rd()
-	// static means (whenever u call huge integer, counter doesn't get restarted)
-	// unsigned means itll go back to 0 after reaching max (if we called function thatt many times)
+
+	// static means (whenever u call huge integer, counter doesn't get restarted, so it keeps incrementing)
+	// unsigned means it'll go back to 0 after reaching max (if we called function thatt many times)
 	static int unsigned counter=0;
-	//+n randomized it (the seed)
+	// standard mersenne_twister_engine seeded with counter (defined above) + n
 	mt19937 gen(counter+n);
-	// gives constantly a new seed to GEN (random number gen) so that there's a new sequence - new value - each time we call function
+	// gives constantly a new seed to GEN so that there's a new sequence - new value - each time we call function
 	counter++;
 	uniform_int_distribution<int>distr(0,9);
 
@@ -134,14 +118,11 @@ HugeInteger::HugeInteger(int n) {
 
 	length=n;
 
-	// initialize data array
+	// initialize & allocate data array
 	data = new int [length];
 
-	// first digit can't be a 0
-	//maybe it can be lol - COME BACK
 
-	// use a while loop (xav is insane)
-	// make sure data[0] isn't 0
+	// use a while loop to make sure data[0] isn't 0
 	// so we'll keep looping until it gives something other than 0 to start with
 	*data=0;
 	while(*data==0){
@@ -149,23 +130,16 @@ HugeInteger::HugeInteger(int n) {
 		*data=distr(gen);
 	}
 
-	// randomly generate digits
+	// randomly generate remaining digits
 	// starting at 1 cuz we already got data[0] above to make sure it wasn't 0
 	for(int i=1;i<n;i++){
-		// generate consecutive random digits
 		data[i]=distr(gen);
-		// testing purposes
-		//printf("%d",data[i]);
-		//printf("\n");
 	}
-
-
-	// test to see wus happening
 
 
 }
 
-// Copy Constructor --ensure we wont have memory space issues with destructor (see below)
+// COPY CONSTRUCTOR --ensure we wont have memory space issues with destructor (rule of 3... see below)
 HugeInteger::HugeInteger(const HugeInteger& num){
 	// this-> notation is implicit here
 	isNegative=num.isNegative;
@@ -180,32 +154,16 @@ HugeInteger::HugeInteger(const HugeInteger& num){
 
 
 // DESTRUCTOR
-// must delete things stored in the heap because they are static (never get deleted otherwise)
-// dont have to delete things stored in the stack (not dynamically allocated) because they get deleted automatically at the end of the function call
+// must delete things stored in the heap (dynamically allocated) because they are static (never get deleted otherwise)
+// don't have to delete things stored in the stack (not dynamically allocated) because they get deleted automatically at the end of the function call
 HugeInteger::~HugeInteger(){
 	// array deletion syntax
 	delete[] data;
 }
 
 
-/*
-int a(){
-	HugeInteger A(3);
-	HugeInteger B();
-	B=A;
-}
-*/
-
 HugeInteger HugeInteger::add(const HugeInteger& h) {
 	HugeInteger result;
-
-	// collect and store information/attributes
-	/*
-	int hlength = h.length;
-	int thislength = this->length;
-	bool hneg = h.isNegative;
-	bool thisneg = this->isNegative;
-	*/
 
 	// see if we're gonna need substraction or addition
 	if(h.isNegative != this->isNegative){
@@ -220,74 +178,75 @@ HugeInteger HugeInteger::add(const HugeInteger& h) {
 		result.isNegative=false;
 	}
 
-	// case where both numbers are positive
 
-
-	// length will be at most one digit longer than greatest size
-
+	// length will be at most one digit longer than greatest size (1 digit more due to carry)
 	// get iteration number n --> run through size of greatest array
-	// declare n outside of if scope
-	// n is size of bigger array
+	// declare n outside of if scope... size of LARGER array (we don't yet know which one...)
 	int n=0;
-	// m is size of smaller array
+	// m is size of SHORTER array
 	int m=0;
-	// initialize pointers
-	// n is pointer to bigger
+
+	// initialize pointers to bigger/smaller arrays
+	// nptr is pointer to LARGER
 	int* nptr;
-	// m is pointer to smaller
+	// mptr is pointer to SHORTER
 	int* mptr;
+
 	if(h.length<=this->length){
-		// loop through this length
+		// this data array (n) is larger than h data array (m)
 		n=this->length;
 		m=h.length;
-		// initialize pointers indicating diff sized arrays
 		nptr = this->data;
 		mptr = h.data;
 	}
 	else{
-		// loop through alternate h
+		// h data array (n) is larger than this data array (m)
 		n=h.length;
 		m=this->length;
-		// initialize pointers indicating diff sized arrays
 		nptr = h.data;
 		mptr = this->data;
 	}
 
-	// print big array
+	/*
+	// print arrays - testing purposes
 	int* ntemp = nptr;
 	int* mtemp = mptr;
+
 	printf("big \n");
 	for(int t=0;t<n;t++){printf("%d",*ntemp);ntemp++;}
 	printf("\n");
 
-	// print smol array
 	printf("smol \n");
 	for(int t=0;t<m;t++){printf("%d",*mtemp);mtemp++;}
 	printf("\n");
+	*/
 
 	// allocate memory for result's data
-	// but we don't know length yet, so we'll allocate temporary array
-	// know max length is n+1
+	// but we don't know the exact length yet, so we'll allocate a temporary array
+	// we know the max length is n+1
 	int* temp_arr = new int [n+1];
 
 
 	// initialize carry
 	int carry=0;
 
+	// arrays must be add in reverse direction (starting with ones column)
+	// we'll assign values to temp_arr using "reverse" indexing cuz we wanna add carry or not at the END, depending, without having to shift entire array
+	// so we'll reverse our temp data array instead of shifting all the data
 
-	// variable to loop thru temp_array cuz we index 0->n here
-	// want this "reverse" indexing here cuz we wanna add carry or not at end, depending, without having to shift entire array
-	// so we'll reverse our data instead of shifting
-	// notice j keeps track of how many
+	// j serves as variable to loop thru temp_array in a forwards direction
+	// notice j keeps track of how many elements there are in temp array (we'll use this later)
 	int j=0;
+
 	// smaller array counter (m with k)
 	int k=m-1;
-	// larger array counter (n with i)
+
+	// larger array counter (n with i) - drives for loop
 	for(int i=n-1;i>=0;i--){
 
 		int tempsum = 0;
 
-		// take larger + smaller until k=0, then take larger only
+		// take larger + smaller until k=0 (finished thru smaller), then take larger only (+ any carry of course)
 		if(k>=0){
 			tempsum = nptr[i]+mptr[k]+carry;
 		}
@@ -299,11 +258,14 @@ HugeInteger HugeInteger::add(const HugeInteger& h) {
 
 		// find resulting (last) digit (ones place of temp)
 		temp_arr[j]=tempsum%10;
+
 		// find carry (first) value (tens place of temp)
-		// but we know max value of temp will be <100
-		// integer division comes clutch here
+		// but we know max value of temp will be <100, so integer division comes clutch here
 		carry=tempsum/10;
+
+		// increment j - looping thru temp array
 		j++;
+		// decrement k - looping thru smaller array (backwards)
 		k--;
 	}
 
@@ -316,18 +278,19 @@ HugeInteger HugeInteger::add(const HugeInteger& h) {
 		result.data[0]=carry;
 	}
 	else{
+		// otherwise, length is simply n
 		result.length=n;
-		// allocate data
 		result.data = new int [result.length];
 	}
 
+	/*
 	// print temp array
 	printf("before \n");
 	for(int t=0;t<j;t++){printf("%d",temp_arr[t]);}
 	printf("\n");
+	*/
 
-
-	// j stores number of elements in temp array --> based on loop above
+	// j stores number of elements in temp array --> based on for loop above
 	// reverse temp array
 	for(int i=0;i<j/2;i++){
 		int temp=temp_arr[i];
@@ -336,62 +299,31 @@ HugeInteger HugeInteger::add(const HugeInteger& h) {
 		temp_arr[j-i-1]=temp;
 	}
 
+	/*
 	// print temp array
 	printf("after \n");
 	for(int t=0;t<j;t++){printf("%d",temp_arr[t]);}
 	printf("\n");
+	*/
 
-
-	// create pointer to point to beginning of temp_arr
+	// create pointer to point to beginning of result.data
 	int* ptemp = result.data;
 
 	if(carry!=0){
 		ptemp++;
-		// start at index 1 of result.data instead of 0
-		// bas STILL INDEX 0 OF TEMP_ARR
+		// start at index 1 of result.data instead of 0, cuz we've already assigned result.data[0]=carry
+		// but STILL INDEX 0 OF TEMP_ARR (we'll use z for this)
 	}
 
-	// counter for temp_array
-	// adds 1 if carry is true
 	int z=0;
 
 	while(ptemp!=(result.data+result.length)){
 		// while pointer is not out of range, that is address result.data has not incremented to past length
+		// assign result.data value of temp_arr
 		*ptemp = temp_arr[z];
-		// dereferencing
 		ptemp++;
 		z++;
 	}
-
-	// print result array
-	printf("after after result \n");
-	for(int t=0;t<result.length;t++){printf("%d",result.data[t]);}
-	printf("\n");
-
-
-
-	/*
-	const HugeInteger& a = h;
-	const HugeInteger& b = *this;
-	int i = a.length > b.length ? a.length : b.length;
-	int j = a.length < b.length ? a.length : b.length;
-	int carry = 0;
-	int k = 0;
-	int len = 0;
-	do {
-	  if(!i--) break;
-	  if(!j--) break;
-	  int ts = a.data[i] + b.data[j] + carry;
-	  temp_arr[k++] = ts % 10;
-	  carry /= 10;
-	  len++;
-	} while(carry);
-	result.data = new int[len];
-	for(int x = 0; x < len; x++){
-	  result.data[len - x - 1] = temp_arr[x];
-	}
-	result.length=len;
-	*/
 
 	// free space
 	delete[] temp_arr;
@@ -415,31 +347,19 @@ int HugeInteger::compareTo(const HugeInteger& h) {
 	return 0;
 }
 
+// taking array of ints and convert it to string
 std::string HugeInteger::toString() {
-	// taking array of ints and convert it to string (if its negative, add "-", all this)
 
-	//initialize string - strings in c++ are stored in the stack (not the heap), so they are allocated dynamically by default (dont need NEW keyword) resizable during runtime
+	// initialize string - strings in c++ are stored in the stack (not the heap), so they are allocated dynamically by default (dont need NEW keyword) resizable during runtime
 	string output_string;
-
-	// pointer to iterate thru string
-	// char* p = output_string;
-	// string::iterator it;
-	// (stores address of a character of str)
-	//it=output_string.begin();
 
 	if(isNegative==true){
 		output_string.push_back('-');
-		// pointer to go through output string
-		// increment it by 1 so we start at first digit rather than negative sign (in line w data array)
-
 	}
 
 	for(int j=0;j<length;j++){
-		// convert list int to char
 		// add '0' to cast to char type from int type
-
 		char temp = data[j]+'0';
-		//printf("d %d \n",data[j]);
 		// append to string (concatenate our temp char into output_string)
 		output_string.push_back(temp);
 	}
