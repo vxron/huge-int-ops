@@ -333,13 +333,327 @@ HugeInteger HugeInteger::add(const HugeInteger& h) {
 }
 
 HugeInteger HugeInteger::subtract(const HugeInteger& h) {
-	// TODO
-	return HugeInteger("");
+	HugeInteger result;
+
+	// operation: [this - h]
+
+	// initialize pointers and length variables
+	// n is for longer int, m is for shorter one
+	int n=0;
+	int m=0;
+	int* nptr;
+	int* mptr;
+
+	// if h is negative and this is positive: this + h
+	// if h is positive and this is negative: -h - this
+	if(this->isNegative != h.isNegative){
+		this->HugeInteger::add(h);
+		// will exit from add function's return
+	}
+
+	else if(h.length<this->length){
+		// this data array (n) is larger than h data array (m)
+		n=this->length;
+		m=h.length;
+		nptr = this->data;
+		mptr = h.data;
+
+		if(h.isNegative == true){
+			// h is negative and this is negative; h - this
+			// and this is longer
+			result.isNegative = true;
+		}
+
+		else{
+			result.isNegative = false;
+		}
+
+	}
+
+	else if(h.length>this->length){
+		// h data array (n) is larger than this data array (m)
+		n=h.length;
+		m=this->length;
+		nptr = h.data;
+		mptr = this->data;
+
+		if(h.isNegative == true){
+			// h is negative and this is negative; h - this
+			// and h is longer
+			result.isNegative = false;
+		}
+		else{
+			result.isNegative = true;
+		}
+	}
+
+	else{
+		// the lengths must be EQUAL...
+		// BAS u dont know which one will be n (numerator) or m (denominator)
+		// because n has to be larger num
+
+		// set up some dummy variables
+		int hnum = 0;
+		int thisnum = 0;
+		// we know if it's - or + by comparing most significant digits, one after the other
+		// most significant at beginning
+		for(int i=0;i<h.length;i++){
+			hnum=h.data[i];
+			thisnum=this->data[i];
+			if(hnum>thisnum){ // h is larger
+				if(h.isNegative == true){result.isNegative=false;} // h - this w bigger h
+				else{result.isNegative=true;} // this - h w bigger h
+				n=h.length;
+				m=this->length;
+				nptr=h.data;
+				mptr=this->data;
+				break;
+			}
+			else if(hnum<thisnum){
+				if(h.isNegative == true){result.isNegative=true;} // h - this w bigger this
+				else{result.isNegative=false;} // this - h w bigger this
+				n=this->length;
+				m=h.length;
+				nptr=this->data;
+				mptr=h.data;
+				break;
+			}
+			else{
+				// if it's the last iteration, then the numbers are equal and result is 0
+				if(i==h.length-1){
+					result.isNegative=false;
+					result.length=1;
+					// dynamically allocate
+					result.data = new int[result.length];
+					// give values
+					result.data[0]=0;
+					return result;
+				}
+				// otherwise continue to next most significant digit
+				continue;
+			}
+		}
+	}
+
+	// create temporary array for result knowing max size is n, size of larger int data aray
+	int* temp_arr = new int [n];
+
+	// make whichever one is longer the numerator (if it's negative, we'll have negative result)
+	// loop through larger but have counters for both
+
+	// temp array counter (in reverse since we can't delete bottom of array if there's empty slots)
+	int j=0;
+
+	// smaller array counter (starts at last index)
+	int k=m-1;
+	// make variable to hold "1" when we need to borrow
+	int borrow1=0;
+	int nval=0;
+
+	for(int i=n-1;i>=0;i--){
+
+		nval=nptr[i];
+
+		if(nval==0 && borrow1==1){
+			nval=9; // and borrow1 remains 1 since we couldn't borrow anything from here
+		}
+
+		else if(nval!=0 && borrow1==1){
+			nval=nval-1; // we borrow 1 from the n value
+			// now our borrow is back to 0
+			borrow1=0;
+		}
+		// have to include to avoid dangling else
+		else{
+			nval=nval+0;
+		}
+
+		// take larger - smaller until k=0 (finished thru smaller), then take larger only
+		if(k>=0){
+			// we're still looping through smaller as well
+			if(nval-mptr[k]<0){
+				// we need to borrow from next one over
+				borrow1 = 1;
+				// we borrowed so we can add 10
+				nval+=10;
+			}
+			// get the substraction
+			temp_arr[j]=nval-mptr[k];
+		}
+
+		else{
+			temp_arr[j]=nval;
+		}
+
+		// increment thru temp array
+		j++;
+		k--;
+	}
+
+	// we now have our diff. result but in the reverse order, stored in temp array
+
+	// default result.length to j
+	result.length=j;
+
+	// we need to get rid of ending 0s that might arise and set the size accordingly. there could be up to n-1 ending 0s.
+	// j represents amount of data in temp_arr (length)
+	// starting pos is thus j-1
+	for(int i=j-2;i>=0;i++){
+		if(temp_arr[i]==0){
+			// delete element to prevent memory leak.. bas we don't have to because we're freeing at the end
+			// decrease length of result
+			result.length--;
+			continue;
+		}
+		else{
+			break;
+			// we've hit a non zero entry so we have nothing more to delete
+		}
+	}
+
+		/*
+		// print temp array
+		printf("before \n");
+		for(int t=0;t<j;t++){printf("%d",temp_arr[t]);}
+		printf("\n");
+		*/
+
+	// result.length now stores number of elements in temp array --> based on for loop above
+	// reverse temp array
+	for(int i=0;i<result.length/2;i++){
+		int temp=temp_arr[i];
+		// preserve value
+		temp_arr[i]=temp_arr[j-i-1];
+		temp_arr[j-i-1]=temp;
+	}
+
+	// create pointer to point to beginning of result.data
+	int* ptemp = result.data;
+
+	int z=0;
+	while(ptemp!=(result.data+result.length)){
+		// while pointer is not out of range, that is address result.data has not incremented to past length
+		// assign result.data value of temp_arr
+		*ptemp = temp_arr[z];
+		ptemp++;
+		z++;
+	}
+
+	// free space
+	delete[] temp_arr;
+
+	return result;
 }
 
 HugeInteger HugeInteger::multiply(const HugeInteger& h) {
-	// TODO
-	return HugeInteger("");
+	HugeInteger result;
+	// get sign
+	if(h.isNegative != this->isNegative){
+		// then we have a +,- situation going on, which calls for - product
+		result.isNegative = true;
+	}
+	else{
+		// they have the same sign, so multiplication is +
+		result.isNegative = false;
+	}
+
+	// n is size of LARGER array
+	int n=0;
+	// m is size of SHORTER array
+	int m=0;
+	// nptr is pointer to LARGER
+	int* nptr;
+	// mptr is pointer to SHORTER
+	int* mptr;
+
+	if(h.length<=this->length){
+		// this data array (n) is larger than h data array (m)
+		n=this->length;
+		m=h.length;
+		nptr = this->data;
+		mptr = h.data;
+	}
+	else{
+		// h data array (n) is larger than this data array (m)
+		n=h.length;
+		m=this->length;
+		nptr = h.data;
+		mptr = this->data;
+	}
+
+	// set temporary result array... length will be AT MOST sum of lengths of nums being multiplied
+	// could have leading 0s
+	int* result_arr = new int[n+m];
+
+	// initialize carry (will serve for addition & multiplication)
+	int carry=0;
+
+	// initialize left shift (will let us iterate through 'columns' we are adding)
+	int left_shift=0;
+	int k=0;
+
+	int tempprod=0; // for storing single multiplications
+	int tempsum=0; // for storing partial additions of columns
+
+	// outer loop will go through smaller number; inner loop will go through larger number
+	for(int i=m-1;i>=0;i--){
+		// get number we're multiplying top by
+		int currentnum = mptr[i];
+		// update k to newest left shift based on i we've reached in smaller number
+		k=left_shift;
+		// reset carry to 0 since we're building upon a new row
+		carry=0;
+
+		for(int j=n-1;j>=0;j--){
+			tempprod=nptr[j]*currentnum+carry;
+
+			// if there's currently a value stored in this column k
+			if(result_arr[k]){
+				// add this previously stored value to our kth tempsum
+				tempsum = tempprod+result_arr[k];
+				// set ADDITION carry
+				carry = tempsum/10;
+				// set NEXT value at [k++] for next iteration (increment k)
+				result_arr[k++]=tempsum%10;
+			}
+			// if there's nothing to add at this column k
+			else{
+				result_arr[k++]=tempprod%10;
+				carry=tempprod/10;
+			}
+			printf("k %d \n",k); // makes very clear how it's working
+		}
+		// breaking out of inner for loop, make sure first digit of row is carry if there's a carry
+		if(carry>0){
+			result_arr[k]=carry;
+		}
+		// increment left shift, so next time we start at an index k one further to the left
+		left_shift++;
+	}
+
+	// initialize pointer to copy over to result
+	int* ptr=result.data;
+
+	// remove leading 0s from result if there are any
+	int index=(n+m)-1; // max index value in result array
+	while(index>=0 && result_arr[index]==0){
+		index--;
+	}
+	// copy over
+	// index now contains value where leading 0s stop and number starts
+	// wanna reverse into data array
+	int rev=0;
+	for(int i=index;i>=0;i--){
+		ptr[rev]=result_arr[i];
+		rev++;
+		ptr++;
+	}
+
+	// can now get length of data array (number of times we go through for loop)
+	result.length=rev;
+	// or result.length = m+n-1
+
+	return result;
 }
 
 int HugeInteger::compareTo(const HugeInteger& h) {
@@ -364,6 +678,6 @@ std::string HugeInteger::toString() {
 		output_string.push_back(temp);
 	}
 
-	printf("tostring s %s \n",output_string.c_str());
+	//printf("tostring s %s \n",output_string.c_str());
 	return output_string;
 }
