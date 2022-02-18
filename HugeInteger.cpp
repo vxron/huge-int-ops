@@ -663,7 +663,7 @@ HugeInteger HugeInteger::multiply(const HugeInteger& h) {
 				result_arr[k++]=tempprod%10;
 				carry=tempprod/10;
 			}
-			printf("k %d \n",k); // makes very clear how it's working
+			//printf("k %d \n",k); // makes very clear how it's working
 		}
 		// breaking out of inner for loop, make sure first digit of row is carry if there's a carry
 		if(carry>0){
@@ -673,6 +673,7 @@ HugeInteger HugeInteger::multiply(const HugeInteger& h) {
 		left_shift++;
 	}
 	// remove leading 0s from result if there are any
+
 	int index=(n+m)-1; // max index value in result array
 	while(index>=0 && result_arr[index]==0){
 		index--;
@@ -696,15 +697,15 @@ HugeInteger HugeInteger::multiply(const HugeInteger& h) {
 
 	// print thru
 		for(int i=0;i<index+1;i++){
-		   printf("%d",result.data[i]);
-		   printf("\n");
+		   //printf("%d",result.data[i]);
+		   //printf("\n");
 		}
 
 	// can now get length of data array (number of times we go through for loop)
 	// or result.length = m+n-1
 
 	// free space
-	delete[] result_arr;
+	//delete[] result_arr;
 
 	return result;
 }
