@@ -30,8 +30,8 @@ public:
 	HugeInteger(const HugeInteger& num);
 
 	// methods
-	HugeInteger add(const HugeInteger& h);
-	HugeInteger subtract(const HugeInteger& h);
+	HugeInteger add(const HugeInteger& h,bool fromSubFunc=false);
+	HugeInteger subtract(const HugeInteger& h,bool fromAddFunc=false);
 	HugeInteger multiply(const HugeInteger& h);
 	int compareTo(const HugeInteger& h);
 	std::string toString();

@@ -333,7 +333,7 @@ double TestHugeInteger::testAdditionSubtraction()
             markSum += caseMarks[mainIdx][subIdx];
             bool addFlag = true;
             msg = "Addition for " + mainCaseMsg[mainIdx] + " and " + subCaseMsg[subIdx];
-            each_fail = testAdditionSubtraction(sizes, maxRun, addFlag, mainCaseTestType[mainIdx], subCaseTestType[subIdx], msg);
+            //each_fail = testAdditionSubtraction(sizes, maxRun, addFlag, mainCaseTestType[mainIdx], subCaseTestType[subIdx], msg);
             fails += each_fail;
             if (each_fail == 0) {
                 totalMark += caseMarks[mainIdx][subIdx] / 2;
@@ -343,7 +343,7 @@ double TestHugeInteger::testAdditionSubtraction()
                 cerr << "Test cases in " << msg << " fail ( -" << caseMarks[mainIdx][subIdx] / 2 << " ) " << endl;
             }
             msg = "Subtraction for " + mainCaseMsg[mainIdx] + " and " + subCaseMsg[subIdx];
-            each_fail = testAdditionSubtraction(sizes, maxRun, !addFlag, mainCaseTestType[mainIdx], subCaseTestType[subIdx], msg);
+            //each_fail = testAdditionSubtraction(sizes, maxRun, !addFlag, mainCaseTestType[mainIdx], subCaseTestType[subIdx], msg);
             fails += each_fail;
             if (each_fail == 0) {
                 totalMark += caseMarks[mainIdx][subIdx] / 2;
@@ -784,7 +784,7 @@ int TestHugeInteger::testPositiveAddition(vector<int> sizes, int maxRun, TestTyp
 
     return failNum;
 }
-
+/*
 int TestHugeInteger::testAdditionSubtraction(vector<int> sizes, int maxRun, bool addFlag, TestType mainTestType, TestType subTestType, string msg)
 {
     int failNum = 0;
@@ -1148,7 +1148,7 @@ int TestHugeInteger::testAdditionSubtraction(vector<int> sizes, int maxRun, bool
     }
     return failNum;
 }
-
+*/
 int TestHugeInteger::testCompareTo(vector<int> sizes, int maxRun, TestType mainTestType, TestType subTestType, string msg)
 {
     int failNum = 0;

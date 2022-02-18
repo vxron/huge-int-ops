@@ -162,13 +162,30 @@ HugeInteger::~HugeInteger(){
 }
 
 
-HugeInteger HugeInteger::add(const HugeInteger& h) {
+
+// default fromsub variable to false
+// only make it true if we're calling from sub function
+HugeInteger HugeInteger::add(const HugeInteger& h, bool fromSubFunc) {
 	HugeInteger result;
 
 	// see if we're gonna need substraction or addition
-	if(h.isNegative != this->isNegative){
-		// then we have a +,- situation going on, which calls for subtraction
-		this->HugeInteger::subtract(h);
+
+	// see if we're coming from sub function
+	if(fromSubFunc==true && h.isNegative != this->isNegative){
+		// then we're coming from the substraction function, so we use the logic there
+		if(this->isNegative==true){
+			// - this - h
+			result.isNegative=true;
+		}
+		else{
+			// + this + h
+			result.isNegative=false;
+		}
+	}
+
+	// we're not coming from sub function, regular addition this + h
+	else if(fromSubFunc==false && h.isNegative != this->isNegative){
+		return this->HugeInteger::subtract(h,true);
 	}
 	else if(h.isNegative == true && this->isNegative == true){
 		// both numbers are negative, so sum hugeint will also be negative
@@ -332,7 +349,7 @@ HugeInteger HugeInteger::add(const HugeInteger& h) {
 
 }
 
-HugeInteger HugeInteger::subtract(const HugeInteger& h) {
+HugeInteger HugeInteger::subtract(const HugeInteger& h,bool fromAddFunc) {
 	HugeInteger result;
 
 	// operation: [this - h]
@@ -344,13 +361,26 @@ HugeInteger HugeInteger::subtract(const HugeInteger& h) {
 	int* nptr;
 	int* mptr;
 
-	// if h is negative and this is positive: this + h
-	// if h is positive and this is negative: -h - this
-	if(this->isNegative != h.isNegative){
-		this->HugeInteger::add(h);
-		// will exit from add function's return
+	/*
+	if(fromAddFunc==true && h.isNegative==true){
+		// means they have diff signs and we wanna do this - h or h - this
+		// but the problem is h is negative or this is negative and we want to make them both positive
+		// we wanna conduct this - h so we want a negative result
+
 	}
 
+	else if(fromAddFunc==true && this->isNegative==true){
+		// we wanna conduct h - this
+	}
+	*/
+
+	// if h is negative and this is positive: this + h
+	// if h is positive and this is negative: -h - this
+	if(fromAddFunc==false && this->isNegative != h.isNegative){
+		return this->HugeInteger::add(h,true);
+	}
+
+	// must be from add function if thisneg != hneg
 	else if(h.length<this->length){
 		// this data array (n) is larger than h data array (m)
 		n=this->length;
@@ -358,7 +388,7 @@ HugeInteger HugeInteger::subtract(const HugeInteger& h) {
 		nptr = this->data;
 		mptr = h.data;
 
-		if(h.isNegative == true){
+		if((h.isNegative==true && fromAddFunc==false) || (h.isNegative==false && fromAddFunc==true)){
 			// h is negative and this is negative; h - this
 			// and this is longer
 			result.isNegative = true;
@@ -377,7 +407,7 @@ HugeInteger HugeInteger::subtract(const HugeInteger& h) {
 		nptr = h.data;
 		mptr = this->data;
 
-		if(h.isNegative == true){
+		if((h.isNegative==true && fromAddFunc==false) || (h.isNegative==false && fromAddFunc==true)){
 			// h is negative and this is negative; h - this
 			// and h is longer
 			result.isNegative = false;
@@ -386,6 +416,7 @@ HugeInteger HugeInteger::subtract(const HugeInteger& h) {
 			result.isNegative = true;
 		}
 	}
+
 
 	else{
 		// the lengths must be EQUAL...
@@ -401,7 +432,7 @@ HugeInteger HugeInteger::subtract(const HugeInteger& h) {
 			hnum=h.data[i];
 			thisnum=this->data[i];
 			if(hnum>thisnum){ // h is larger
-				if(h.isNegative == true){result.isNegative=false;} // h - this w bigger h
+				if((h.isNegative==true && fromAddFunc==false) || (h.isNegative==false && fromAddFunc==true)){result.isNegative=false;} // h - this w bigger h
 				else{result.isNegative=true;} // this - h w bigger h
 				n=h.length;
 				m=this->length;
@@ -410,7 +441,7 @@ HugeInteger HugeInteger::subtract(const HugeInteger& h) {
 				break;
 			}
 			else if(hnum<thisnum){
-				if(h.isNegative == true){result.isNegative=true;} // h - this w bigger this
+				if((h.isNegative==true && fromAddFunc==false) || (h.isNegative==false && fromAddFunc==true)){result.isNegative=true;} // h - this w bigger this
 				else{result.isNegative=false;} // this - h w bigger this
 				n=this->length;
 				m=h.length;
@@ -490,19 +521,18 @@ HugeInteger HugeInteger::subtract(const HugeInteger& h) {
 		k--;
 	}
 
+	//printf("j1 %d \n",j);
 	// we now have our diff. result but in the reverse order, stored in temp array
-
-	// default result.length to j
-	result.length=j;
 
 	// we need to get rid of ending 0s that might arise and set the size accordingly. there could be up to n-1 ending 0s.
 	// j represents amount of data in temp_arr (length)
 	// starting pos is thus j-1
-	for(int i=j-2;i>=0;i++){
+
+	for(int i=j-1;i>=0;i--){
 		if(temp_arr[i]==0){
 			// delete element to prevent memory leak.. bas we don't have to because we're freeing at the end
 			// decrease length of result
-			result.length--;
+			j--;
 			continue;
 		}
 		else{
@@ -511,20 +541,17 @@ HugeInteger HugeInteger::subtract(const HugeInteger& h) {
 		}
 	}
 
-		/*
-		// print temp array
-		printf("before \n");
-		for(int t=0;t<j;t++){printf("%d",temp_arr[t]);}
-		printf("\n");
-		*/
+	result.length=j;
+	result.data=new int[result.length];
+	//printf("j2 %d \n",j);
 
 	// result.length now stores number of elements in temp array --> based on for loop above
 	// reverse temp array
 	for(int i=0;i<result.length/2;i++){
 		int temp=temp_arr[i];
 		// preserve value
-		temp_arr[i]=temp_arr[j-i-1];
-		temp_arr[j-i-1]=temp;
+		temp_arr[i]=temp_arr[result.length-i-1];
+		temp_arr[result.length-i-1]=temp;
 	}
 
 	// create pointer to point to beginning of result.data
@@ -538,6 +565,12 @@ HugeInteger HugeInteger::subtract(const HugeInteger& h) {
 		ptemp++;
 		z++;
 	}
+
+	/*
+	printf("before \n");
+	for(int t=0;t<result.length;t++){printf("%d",result.data[t]);}
+	printf("\n");
+	*/
 
 	// free space
 	delete[] temp_arr;
@@ -555,6 +588,14 @@ HugeInteger HugeInteger::multiply(const HugeInteger& h) {
 	else{
 		// they have the same sign, so multiplication is +
 		result.isNegative = false;
+	}
+
+	// 0 multiplication
+	if(h.data[0]==0 || this->data[0]==0){
+		result.length=1;
+		result.isNegative=false;
+		result.data=new int[result.length];
+		result.data[0]=0;
 	}
 
 	// n is size of LARGER array
@@ -600,6 +641,7 @@ HugeInteger HugeInteger::multiply(const HugeInteger& h) {
 		// get number we're multiplying top by
 		int currentnum = mptr[i];
 		// update k to newest left shift based on i we've reached in smaller number
+		// 0 paddding
 		k=left_shift;
 		// reset carry to 0 since we're building upon a new row
 		carry=0;
@@ -608,13 +650,13 @@ HugeInteger HugeInteger::multiply(const HugeInteger& h) {
 			tempprod=nptr[j]*currentnum+carry;
 
 			// if there's currently a value stored in this column k
-			if(result_arr[k]){
+			if(result_arr[k]>0){
 				// add this previously stored value to our kth tempsum
 				tempsum = tempprod+result_arr[k];
-				// set ADDITION carry
-				carry = tempsum/10;
 				// set NEXT value at [k++] for next iteration (increment k)
 				result_arr[k++]=tempsum%10;
+				// set ADDITION carry
+				carry = tempsum/10;
 			}
 			// if there's nothing to add at this column k
 			else{
@@ -630,35 +672,100 @@ HugeInteger HugeInteger::multiply(const HugeInteger& h) {
 		// increment left shift, so next time we start at an index k one further to the left
 		left_shift++;
 	}
-
-	// initialize pointer to copy over to result
-	int* ptr=result.data;
-
 	// remove leading 0s from result if there are any
 	int index=(n+m)-1; // max index value in result array
 	while(index>=0 && result_arr[index]==0){
 		index--;
 	}
+
 	// copy over
 	// index now contains value where leading 0s stop and number starts
+	// issue is length could be index+1 or index
+	// like if we have 11*11=121 or 99*99=2084
+	result.length=index+1;
+	result.data=new int[result.length];
+
+	// initialize pointer to copy over to result
+	int* tmpptr=result.data;
+
 	// wanna reverse into data array
-	int rev=0;
 	for(int i=index;i>=0;i--){
-		ptr[rev]=result_arr[i];
-		rev++;
-		ptr++;
+		*tmpptr=result_arr[i];
+		tmpptr++;
 	}
 
+	// print thru
+		for(int i=0;i<index+1;i++){
+		   printf("%d",result.data[i]);
+		   printf("\n");
+		}
+
 	// can now get length of data array (number of times we go through for loop)
-	result.length=rev;
 	// or result.length = m+n-1
+
+	// free space
+	delete[] result_arr;
 
 	return result;
 }
 
+// return 0 if equal
+// return -1 if this is smaller than h
+// return 1 if this is bigger than h
 int HugeInteger::compareTo(const HugeInteger& h) {
-	// TODO
-	return 0;
+	int result=0;
+	int* nptr;
+	int* mptr;
+	nptr=h.data;
+	mptr=this->data;
+	int n=0;
+	if(h.isNegative==true && this->isNegative==false){
+		result=1;
+	}
+	else if(h.isNegative==false && this->isNegative==true){
+		result=-1;
+	}
+	else if(h.isNegative==false && this->isNegative==false){
+		if(h.length>this->length){result=-1;}
+		else if(h.length<this->length){result=1;}
+		else{
+			n=h.length;
+			for(int i=0;i<n;i++){
+				if(nptr[i]>mptr[i]){
+					result=-1;
+					break;
+				}
+				else if(nptr[i]<mptr[i]){
+					result=1;
+					break;
+				}
+				else{
+					continue;
+				}
+			}
+		}
+	}
+	else if(h.isNegative==true && this->isNegative==true){
+		if(h.length>this->length){result=1;}
+		else if(h.length<this->length){result=-1;}
+		else{
+			n=h.length;
+			for(int i=0;i<n;i++){
+				if(nptr[i]>mptr[i]){
+					result=1;
+					break;
+				}
+				else if(nptr[i]<mptr[i]){
+					result=-1;
+					break;
+				}
+				else{
+					continue;
+				}
+			}
+		}
+	}
+	return result;
 }
 
 // taking array of ints and convert it to string
