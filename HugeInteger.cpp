@@ -165,6 +165,7 @@ HugeInteger::~HugeInteger(){
 
 // default fromsub variable to false
 // only make it true if we're calling from sub function
+// h + this, -h - this
 HugeInteger HugeInteger::add(const HugeInteger& h, bool fromSubFunc) {
 	HugeInteger result;
 
@@ -596,6 +597,7 @@ HugeInteger HugeInteger::multiply(const HugeInteger& h) {
 		result.isNegative=false;
 		result.data=new int[result.length];
 		result.data[0]=0;
+		return result;
 	}
 
 	// n is size of LARGER array

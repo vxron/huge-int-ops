@@ -784,7 +784,7 @@ int TestHugeInteger::testPositiveAddition(vector<int> sizes, int maxRun, TestTyp
 
     return failNum;
 }
-/*
+
 int TestHugeInteger::testAdditionSubtraction(vector<int> sizes, int maxRun, bool addFlag, TestType mainTestType, TestType subTestType, string msg)
 {
     int failNum = 0;
@@ -1148,7 +1148,7 @@ int TestHugeInteger::testAdditionSubtraction(vector<int> sizes, int maxRun, bool
     }
     return failNum;
 }
-*/
+
 int TestHugeInteger::testCompareTo(vector<int> sizes, int maxRun, TestType mainTestType, TestType subTestType, string msg)
 {
     int failNum = 0;
