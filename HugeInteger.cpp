@@ -542,6 +542,8 @@ HugeInteger HugeInteger::subtract(const HugeInteger& h,bool fromAddFunc) {
 		}
 	}
 
+
+
 	result.length=j;
 	result.data=new int[result.length];
 	//printf("j2 %d \n",j);
@@ -626,7 +628,7 @@ HugeInteger HugeInteger::multiply(const HugeInteger& h) {
 
 	// set temporary result array... length will be AT MOST sum of lengths of nums being multiplied
 	// could have leading 0s
-	int* result_arr = new int[n+m];
+	int* result_arr = new int[n + m]{0};
 
 	// initialize carry (will serve for addition & multiplication)
 	int carry=0;
